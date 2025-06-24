@@ -1,5 +1,7 @@
 # baby-helper
 
+> ⚠️ **注意: このアプリはあくまで便利ツールです。運用場所や用途によっては、必ず冗長化やバックアップ等の安全対策を講じてください。**
+
 Raspberry Pi ベースの見守りカメラシステムです。  
 赤ちゃんの見守りに特化し、以下の機能を提供します
 
@@ -138,3 +140,33 @@ http://[Raspberry PiのIP]
 - Python 3.8+
 - SwitchBot 温湿度計
 - CW268 Bluetoothシャッター
+
+---
+
+## 📁 ディレクトリ・ファイル構成
+
+```
+baby-helper
+├── bin/                # デプロイやタイムラプス生成用スクリプト
+│   ├── deploy.sh
+│   └── gen_timelapse_archive.sh
+├── newrelic_flex_send_cpu_info.yml  # NewRelic用設定
+├── README.md           # このドキュメント
+├── scripts/            # 補助スクリプト・環境変数ファイル
+│   ├── cw268_milk_time_watcher.py   # ミルク時間記録用
+│   ├── switchbot_get_metrics.py     # SwitchBotデータ取得
+│   └── switchbot.env.sample         # SwitchBot用サンプルenv
+├── src/                # アプリ本体
+│   ├── camera/         # カメラ制御・顔検出
+│   │   ├── camera_manager.py
+│   │   └── face_detector.py
+│   ├── main.py         # メインエントリ
+│   ├── utils/          # ユーティリティ
+│   │   ├── milk_time.py
+│   │   └── temperature.py
+│   └── web/            # Webサーバ
+│       └── server.py
+├── systemd/            # systemdサービス定義
+│   ├── baby_camera.service
+│   └── cw268_milk_watcher.service
+```
