@@ -1,6 +1,7 @@
 # baby-helper
 
-> ⚠️ **注意: このアプリはあくまで便利ツールです。運用場所や用途によっては、必ず冗長化やバックアップ等の安全対策を講じてください。**
+> ⚠️ **注意: このアプリはあくまで便利ツールです。**
+> **運用場所や用途によっては、必ず冗長化やバックアップ等の安全対策を講じてください。**
 
 Raspberry Pi ベースの見守りカメラシステムです。  
 赤ちゃんの見守りに特化し、以下の機能を提供します
@@ -15,10 +16,15 @@ Raspberry Pi ベースの見守りカメラシステムです。
 
 ## 🛠️ セットアップ手順
 
-### 0. Raspberry環境
+### 0. 動作環境など
 
-- OS `Raspberry Pi OS （Debian bookworm 12）`
-- ユーザー名は`baby`
+- Raspberry Pi4
+  - OS `Raspberry Pi OS （Debian bookworm 12）`
+  - ユーザー名は`baby`
+  - OV5647 カメラモジュール
+  - Python 3.11
+- SwitchBot 温湿度計
+- CW268 Bluetoothシャッター
 
 ### 1. 依存パッケージのインストール
 
@@ -38,7 +44,7 @@ pip install flask requests opencv-python numpy python-dotenv evdev picamera2
 
 ### 3. Bluetoothシャッター（CW268）の登録
 
-<details><summary>▶ 手順を開く</summary>
+<details><summary>手順を開く</summary>
 
 ```bash
 bluetoothctl
@@ -67,9 +73,20 @@ sudo usermod -aG input baby
 
 </details>
 
----
+### 4. SwitchBot 温湿度計設定
 
-## ⚙️ サービス設定
+```bash
+cp scripts/switchbot.env.example scripts/switchbot.env
+# エディタで編集して実際のトークンとデバイスIDを設定
+```
+
+### 5. デプロイ
+
+```bash
+./bin/deploy.sh
+```
+
+#### ⚙️ サービス有効化
 
 ```bash
 sudo cp systemd/*.service /etc/systemd/system/
@@ -80,42 +97,7 @@ sudo systemctl start baby_camera.service
 sudo systemctl start cw268_milk_watcher.service
 ```
 
----
-
-## 🌡 SwitchBot 環境変数の設定
-
-```bash
-cp scripts/switchbot.env.example scripts/switchbot.env
-# エディタで編集して実際のトークンとデバイスIDを設定
-```
-
----
-
-## 📦 デプロイと更新
-
-### デプロイ
-
-```bash
-./bin/deploy.sh
-```
-
-### 更新時の再起動
-
-```bash
-sudo systemctl restart baby_camera.service
-sudo systemctl restart cw268_milk_watcher.service
-```
-
-### ログ確認
-
-```bash
-journalctl -u baby_camera.service -f
-journalctl -u cw268_milk_watcher.service -f
-```
-
----
-
-## 🕒 SwitchBot メトリクス収集（cron）
+#### 🕒 SwitchBot 温湿度情報収集（cron）
 
 ```bash
 crontab -e
@@ -132,14 +114,6 @@ crontab -e
 ```
 http://[Raspberry PiのIP]
 ```
----
-
-## 📋 必要環境
-
-- Raspberry Pi（Camera Module対応）
-- Python 3.8+
-- SwitchBot 温湿度計
-- CW268 Bluetoothシャッター
 
 ---
 
@@ -169,4 +143,18 @@ baby-helper
 ├── systemd/            # systemdサービス定義
 │   ├── baby_camera.service
 │   └── cw268_milk_watcher.service
+```
+
+## Option: CPU温度をNewRelicでモニタリング
+
+- 前提: NewRelic Infrastructure Agentを[インストール済み](https://docs.newrelic.com/jp/docs/infrastructure/infrastructure-agent/linux-installation/package-manager-install/)
+
+```
+cp ./newrelic_flex_send_cpu_info.yml /etc/newrelic-infra/integrations.d/cpu_temp.yml
+sudo systemctl restart newrelic-infra.service
+```
+
+```
+# NRQL
+SELECT max(cpu_measure_temp) from TemperatureSample facet entityName TIMESERIES AUTO
 ```
