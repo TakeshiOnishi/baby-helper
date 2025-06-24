@@ -1,0 +1,15 @@
+[Unit]
+Description=Baby Camera Service
+After=network.target
+
+[Service]
+Type=simple
+User=baby
+WorkingDirectory=/home/baby
+ExecStart=/usr/bin/authbind --deep /home/baby/my_venv/bin/python3 /home/baby/src/main.py
+Restart=always
+RestartSec=10
+Environment=PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages
+
+[Install]
+WantedBy=multi-user.target 

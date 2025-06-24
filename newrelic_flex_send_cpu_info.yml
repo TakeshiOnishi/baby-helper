@@ -1,0 +1,13 @@
+integrations:
+  - name: nri-flex
+    config:
+      name: cpuInfo
+      interval: 60s
+      apis:
+        - name: Temperature
+          commands:
+            - run: vcgencmd measure_temp
+              split: horizontal
+              set_header: [cpu_measure_temp]
+              regex_match: true
+              split_by: ([0-9.]+)'C
