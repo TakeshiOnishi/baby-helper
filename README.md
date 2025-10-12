@@ -8,8 +8,6 @@ Raspberry Pi ベースの見守りカメラシステムです。
 
 - リアルタイム映像配信（MJPEG）
 - 温湿度の取得と表示（SwitchBot連携）
-- 顔検出表示
-- Bluetoothシャッター連携によるミルク時間記録
 - 10秒ごとの高画質キャプチャ保存
 
 ---
@@ -24,13 +22,12 @@ Raspberry Pi ベースの見守りカメラシステムです。
   - OV5647 カメラモジュール
   - Python 3.11
 - SwitchBot 温湿度計
-- CW268 Bluetoothシャッター
 
 ### 1. 依存パッケージのインストール
 
 ```bash
 sudo apt update
-sudo apt install python3-pip python3-venv python3-evdev authbind
+sudo apt install python3-pip python3-venv authbind
 ```
 
 ### 2. 仮想環境とパッケージセットアップ
@@ -39,48 +36,17 @@ sudo apt install python3-pip python3-venv python3-evdev authbind
 python3 -m venv my_venv
 source my_venv/bin/activate
 export PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages
-pip install flask requests opencv-python numpy python-dotenv evdev picamera2
+pip install flask requests opencv-python numpy python-dotenv picamera2
 ```
 
-### 3. Bluetoothシャッター（CW268）の登録
-
-<details><summary>手順を開く</summary>
-
-```bash
-bluetoothctl
-power on
-scan on
-# 該当のデバイス名を見つけたらアドレスを指定 (e.g. "CW Shutter XX:XX:XX:XX:XX")
-pair XX:XX:XX:XX:XX:XX
-trust XX:XX:XX:XX:XX:XX
-connect XX:XX:XX:XX:XX:XX
-```
-
-ルール設定：
-
-```bash
-sudo vi /etc/udev/rules.d/99-cw268.rules
-
-# 登録内容
-# KERNEL=="event*", SUBSYSTEM=="input", ATTRS{name}=="CW Shutter", SYMLINK+="input/cw268_milk"
-```
-
-```bash
-sudo udevadm control --reload-rules
-sudo udevadm trigger
-sudo usermod -aG input baby
-```
-
-</details>
-
-### 4. SwitchBot 温湿度計設定
+### 3. SwitchBot 温湿度計設定
 
 ```bash
 cp scripts/switchbot.env.example scripts/switchbot.env
 # エディタで編集して実際のトークンとデバイスIDを設定
 ```
 
-### 5. デプロイ
+### 4. デプロイ
 
 ```bash
 ./bin/deploy.sh
@@ -92,9 +58,7 @@ cp scripts/switchbot.env.example scripts/switchbot.env
 sudo cp systemd/*.service /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable baby_camera.service
-sudo systemctl enable cw268_milk_watcher.service
 sudo systemctl start baby_camera.service
-sudo systemctl start cw268_milk_watcher.service
 ```
 
 #### 🕒 SwitchBot 温湿度情報収集（cron）
@@ -127,22 +91,18 @@ baby-helper
 ├── newrelic_flex_send_cpu_info.yml  # NewRelic用設定
 ├── README.md           # このドキュメント
 ├── scripts/            # 補助スクリプト・環境変数ファイル
-│   ├── cw268_milk_time_watcher.py   # ミルク時間記録用
 │   ├── switchbot_get_metrics.py     # SwitchBotデータ取得
 │   └── switchbot.env.sample         # SwitchBot用サンプルenv
 ├── src/                # アプリ本体
-│   ├── camera/         # カメラ制御・顔検出
-│   │   ├── camera_manager.py
-│   │   └── face_detector.py
+│   ├── camera/         # カメラ制御
+│   │   └── camera_manager.py
 │   ├── main.py         # メインエントリ
 │   ├── utils/          # ユーティリティ
-│   │   ├── milk_time.py
 │   │   └── temperature.py
 │   └── web/            # Webサーバ
 │       └── server.py
 ├── systemd/            # systemdサービス定義
-│   ├── baby_camera.service
-│   └── cw268_milk_watcher.service
+│   └── baby_camera.service
 ```
 
 ## Option: CPU温度をNewRelicでモニタリング

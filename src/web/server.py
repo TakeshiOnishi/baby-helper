@@ -6,12 +6,10 @@ import time
 import flask
 
 class WebServer:
-    def __init__(self, camera_manager, face_detector, temp_manager, milk_manager):
+    def __init__(self, camera_manager, temp_manager):
         self.app = Flask(__name__)
         self.camera_manager = camera_manager
-        self.face_detector = face_detector
         self.temp_manager = temp_manager
-        self.milk_manager = milk_manager
         self.setup_routes()
 
     def setup_routes(self):
@@ -36,50 +34,6 @@ class WebServer:
                         object-fit: contain;
                         display: block; 
                         margin: auto; 
-                      }
-                      .toggle-container {
-                        position: fixed;
-                        top: 10px;
-                        left: 10px;
-                        z-index: 1000;
-                        display: flex;
-                        align-items: center;
-                      }
-                      .switch {
-                        position: relative;
-                        display: inline-block;
-                        width: 50px;
-                        height: 28px;
-                      }
-                      .switch input { display: none; }
-                      .slider {
-                        position: absolute;
-                        cursor: pointer;
-                        top: 0; left: 0; right: 0; bottom: 0;
-                        background-color: #ccc;
-                        border-radius: 34px;
-                        transition: .4s;
-                      }
-                      .slider:before {
-                        position: absolute;
-                        content: '';
-                        height: 22px; width: 22px;
-                        left: 3px; bottom: 3px;
-                        background-color: white;
-                        border-radius: 50%;
-                        transition: .4s;
-                      }
-                      input:checked + .slider {
-                        background-color: #2196F3;
-                      }
-                      input:checked + .slider:before {
-                        transform: translateX(22px);
-                      }
-                      .toggle-label {
-                        margin-left: 12px;
-                        color: white;
-                        font-size: 18px;
-                        user-select: none;
                       }
                       .status {
                         position: fixed;
@@ -114,35 +68,15 @@ class WebServer:
                         cursor: pointer;
                         margin-top: 10px;
                       }
-                      .info {
-                        position: fixed;
-                        right: 10px;
-                        bottom: 10px;
-                        background: rgba(0,0,0,0.5);
-                        color: #fff;
-                        font-size: 12px;
-                        padding: 4px 10px;
-                        border-radius: 8px;
-                        z-index: 1000;
-                        pointer-events: none;
-                      }
                     </style>
                 </head>
                 <body>
-                    <div class="toggle-container">
-                      <label class="switch">
-                        <input type="checkbox" id="qualityToggle" onchange="toggleQuality();updateInfo()">
-                        <span class="slider"></span>
-                      </label>
-                      <span class="toggle-label">高画質モード</span>
-                    </div>
                     <div class="status" id="status">接続中...</div>
                     <div class="error" id="error">
                         <div>接続が切断されました</div>
                         <button class="reconnect-btn" onclick="reconnect()">再接続</button>
                     </div>
                     <img id="video" src="/video_feed" onload="onImageLoad()" onerror="onImageError()" />
-                    <div class="info" id="info">画質: 80 / FPS: 10</div>
                     
                     <script>
                         function updateStatus(message, isError = false) {
@@ -171,11 +105,6 @@ class WebServer:
                             showError();
                         }
                         
-                        function toggleQuality() {
-                            const toggle = document.getElementById('qualityToggle');
-                            const img = document.getElementById('video');
-                            img.src = toggle.checked ? '/video_feed?quality=best' : '/video_feed';
-                        }
                         
                         function reconnect() {
                             const img = document.getElementById('video');
@@ -184,18 +113,6 @@ class WebServer:
                             updateStatus('再接続中...');
                         }
                         
-                        function updateInfo() {
-                          const toggle = document.getElementById('qualityToggle');
-                          const info = document.getElementById('info');
-                          if (toggle.checked) {
-                            info.textContent = '画質: 95 / FPS: 24';
-                          } else {
-                            info.textContent = '画質: 80 / FPS: 10';
-                          }
-                        }
-                        
-                        document.getElementById('qualityToggle').addEventListener('change', updateInfo);
-                        window.addEventListener('DOMContentLoaded', updateInfo);
                         
                         // ページの可視性が変わった時の処理
                         document.addEventListener('visibilitychange', function() {
@@ -234,16 +151,12 @@ class WebServer:
 
         @self.app.route('/video_feed')
         def video_feed():
-            q_param = flask.request.args.get('quality')
-            return Response(self.generate_frames(q_param), mimetype='multipart/x-mixed-replace; boundary=frame')
+            return Response(self.generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
-    def generate_frames(self, q_param=None):
-        # デフォルトは軽量モード
+    def generate_frames(self):
+        # 固定の品質設定
         quality = 80
         fps = 10
-        if q_param == 'best':
-            quality = 95
-            fps = 24
         interval = 1.0 / fps
         while True:
             frame = self.camera_manager.get_frame()
