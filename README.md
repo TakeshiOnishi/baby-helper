@@ -39,11 +39,14 @@ export PYTHONPATH=$PYTHONPATH:/usr/lib/python3/dist-packages
 pip install flask requests opencv-python numpy python-dotenv picamera2
 ```
 
-### 3. SwitchBot 温湿度計設定
+### 3. 環境変数設定
 
 ```bash
-cp scripts/switchbot.env.example scripts/switchbot.env
-# エディタで編集して実際のトークンとデバイスIDを設定
+cp .env.sample .env
+# エディタで編集して実際の値を設定
+# - BABY_BIRTH_DAY: 赤ちゃんの誕生日 (YYYY-MM-DD形式)
+# - SWITCHBOT_TOKEN: SwitchBotのAPIトークン
+# - SWITCHBOT_DEVICE_ID: SwitchBot温湿度計のデバイスID
 ```
 
 ### 4. デプロイ
@@ -85,14 +88,14 @@ http://[Raspberry PiのIP]
 
 ```
 baby-helper
+├── .env.sample        # 環境変数サンプルファイル
 ├── bin/                # デプロイやタイムラプス生成用スクリプト
 │   ├── deploy.sh
 │   └── gen_timelapse_archive.sh
 ├── newrelic_flex_send_cpu_info.yml  # NewRelic用設定
 ├── README.md           # このドキュメント
-├── scripts/            # 補助スクリプト・環境変数ファイル
-│   ├── switchbot_get_metrics.py     # SwitchBotデータ取得
-│   └── switchbot.env.sample         # SwitchBot用サンプルenv
+├── scripts/            # 補助スクリプト
+│   └── switchbot_get_metrics.py     # SwitchBotデータ取得
 ├── src/                # アプリ本体
 │   ├── camera/         # カメラ制御
 │   │   └── camera_manager.py

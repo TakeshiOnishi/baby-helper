@@ -16,24 +16,60 @@ class WebServer:
         @self.app.route('/')
         def index():
             return """
-            <html>
+            <html style="margin: 0; padding: 0; height: 100%;">
                 <head>
                     <title>ベビィカメラ</title>
                     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0, user-scalable=yes">
                     <style>
-                      body { 
+                      * {
+                        margin: 0;
+                        padding: 0;
+                        box-sizing: border-box;
+                      }
+                      html, body { 
                         margin: 0; 
                         padding: 0; 
                         background: #000; 
-                        overflow: hidden; 
+                        overflow-x: hidden; 
                         font-family: Arial, sans-serif;
+                        height: 100%;
+                        width: 100%;
+                      }
+                      .container {
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        width: 100%;
+                        min-height: 100vh;
                       }
                       img { 
-                        height: 100vh; 
                         width: 100vw; 
+                        max-height: calc(100vh - 60px);
                         object-fit: contain;
                         display: block; 
-                        margin: auto; 
+                        margin: 0;
+                        padding: 0;
+                      }
+                      .refresh-btn {
+                        background: #2a2a2a;
+                        border: none;
+                        cursor: pointer;
+                        width: 100%;
+                        max-width: 100vw;
+                        height: 60px;
+                        margin: 0;
+                        border-top: 1px solid #333;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                      }
+                      .refresh-btn:active {
+                        background: #1a1a1a;
+                      }
+                      .refresh-btn svg {
+                        width: 28px;
+                        height: 28px;
+                        fill: #aaa;
                       }
                       .status {
                         position: fixed;
@@ -45,6 +81,7 @@ class WebServer:
                         border-radius: 5px;
                         font-size: 12px;
                         z-index: 1000;
+                        display: none;
                       }
                       .error {
                         position: fixed;
@@ -71,12 +108,19 @@ class WebServer:
                     </style>
                 </head>
                 <body>
-                    <div class="status" id="status">接続中...</div>
-                    <div class="error" id="error">
-                        <div>接続が切断されました</div>
-                        <button class="reconnect-btn" onclick="reconnect()">再接続</button>
+                    <div class="container">
+                        <div class="status" id="status">接続中...</div>
+                        <div class="error" id="error">
+                            <div>接続が切断されました</div>
+                            <button class="reconnect-btn" onclick="reconnect()">再接続</button>
+                        </div>
+                        <img id="video" src="/video_feed" onload="onImageLoad()" onerror="onImageError()" />
+                        <button class="refresh-btn" onclick="location.reload()">
+                            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
+                            </svg>
+                        </button>
                     </div>
-                    <img id="video" src="/video_feed" onload="onImageLoad()" onerror="onImageError()" />
                     
                     <script>
                         function updateStatus(message, isError = false) {

@@ -6,14 +6,14 @@ from datetime import datetime, timedelta
 import time
 from pathlib import Path
 
-# 環境変数ファイルのパスを設定
-env_file = Path(__file__).parent / 'switchbot.env'
+# 環境変数ファイルのパスを設定（プロジェクトルートの.env）
+env_file = Path(__file__).parent.parent / '.env'
 
 # 環境変数ファイルを読み込む
 if env_file.exists():
     with open(env_file) as f:
         for line in f:
-            if line.strip() and not line.startswith('#'):
+            if line.strip() and not line.startswith('#') and '=' in line:
                 key, value = line.strip().split('=', 1)
                 os.environ[key] = value.strip('"')
 
